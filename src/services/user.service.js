@@ -1,8 +1,5 @@
 import pool from "../database/index.js";
-import { config } from "dotenv";
 import { generateToken, logger, hashPassword } from "../utils/index.js";
-
-config();
 
 export const getAllUsersService = async () => {
   try {
@@ -19,7 +16,9 @@ export const getOneUserByIdService = async (id) => {
   try {
     const user = await pool.query("select * from users where id = $1", [id]);
 
-    return user.rows;
+    if (!user.rows[0]) return "User not found!";
+
+    return user.rows[0];
   } catch (error) {
     logger.error(error);
     return error;
@@ -28,13 +27,24 @@ export const getOneUserByIdService = async (id) => {
 
 export const registerService = async (user) => {
   try {
-    const data = await pool.query("select * from users where email = $1", [
+    const dataEmail = await pool.query("select * from users where email = $1", [
       user.email,
     ]);
 
-    if (data.rows[0]) {
+    const dataUsername = await pool.query(
+      "select * from users where username = $1",
+      [user.username]
+    );
+
+    const dataPhone_number = await pool.query(
+      "select * from users where phone_number = $1",
+      [user.phone_number]
+    );
+
+    if (dataEmail.rows[0] || dataUsername.rows[0] || dataPhone_number.rows[0]) {
       return "Already exists!";
     }
+
     const queryString = `
       INSERT INTO users (
         name,
@@ -77,6 +87,12 @@ export const registerService = async (user) => {
 
 export const loginService = async (data) => {
   try {
+    const user = await pool.query("select * from users where email = $1", [
+      data.email,
+    ]);
+
+    if (!user.rows[0]) return "User not found!";
+
     const accessToken = await generateToken("access", data);
     const refreshToken = await generateToken("refresh", data);
 
@@ -92,6 +108,8 @@ export const updateUserService = async (id, data) => {
     const oldUserData = await pool.query(`select * from users where id = $1`, [
       id,
     ]);
+
+    if (!oldUserData.rows[0]) return "User not found!";
 
     const queryString = `
       UPDATE users
@@ -135,9 +153,16 @@ export const updateUserService = async (id, data) => {
 
 export const deleteUserService = async (id) => {
   try {
-    await pool.query("delete from users where id = $1", [id]);
+    const data = await pool.query("select * from users where id = $1", [id]);
 
-    return "deleted";
+    if (!data.rows[0]) return "User not found!";
+
+    const result = await pool.query(
+      "delete from users where id = $1 returning *",
+      [id]
+    );
+
+    return result.rows[0];
   } catch (error) {
     logger.error(error);
     return error;

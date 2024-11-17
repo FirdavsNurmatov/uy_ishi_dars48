@@ -19,7 +19,9 @@ export const getSocProfileByIdService = async (id) => {
       [id]
     );
 
-    return socProfile.rows[0] || "Not found!";
+    if (!socProfile.rows[0]) return "Not found!";
+
+    return socProfile.rows[0];
   } catch (error) {
     logger.error(error);
     return error;
@@ -28,22 +30,10 @@ export const getSocProfileByIdService = async (id) => {
 
 export const createSocProfileService = async (data) => {
   try {
-    const socProfiles = await pool.query(
-      "select * from social_profiles where id = $1",
-      [,]
-    );
-
-    if (socProfiles.rows[0]) {
-      return "Already has!";
-    }
-
     if (data.user_id) {
-      const user = await pool.query(
-        `
-        select * from users where id = $1
-      `,
-        [data?.user_id]
-      );
+      const user = await pool.query(`select * from users where id = $1`, [
+        data?.user_id,
+      ]);
 
       if (!user.rows[0]) return "User not found!";
     }
@@ -85,12 +75,9 @@ export const updateSocProfileService = async (id, data) => {
     if (!oldSocProfileData.rows[0]) return "Profile not found!";
 
     if (data.user_id) {
-      const user = await pool.query(
-        `
-        select * from users where id = $1
-      `,
-        [data?.user_id]
-      );
+      const user = await pool.query(`select * from users where id = $1`, [
+        data?.user_id,
+      ]);
 
       if (!user.rows[0]) return "User not found!";
     }
@@ -109,13 +96,12 @@ export const updateSocProfileService = async (id, data) => {
     const result = await pool.query(queryString, [
       data.user_id || oldSocProfileData.rows[0].user_id,
       data.platform || oldSocProfileData.rows[0].platform,
-      data.platform_user || oldSocProfileData.rows[0].user_id,
+      data.platform_user || oldSocProfileData.rows[0].platform_user,
       id,
     ]);
 
     return result.rows[0];
   } catch (error) {
-    console.log(error);
     logger.error(error);
     return error;
   }
@@ -123,9 +109,19 @@ export const updateSocProfileService = async (id, data) => {
 
 export const deleteSocProfileService = async (id) => {
   try {
-    await pool.query("delete from social_profiles where id = $1", [id]);
+    const data = await pool.query(
+      "select * from social_profiles where id = $1",
+      [id]
+    );
 
-    return "deleted";
+    if (!data.rows[0]) return "Profile not found!";
+
+    const result = await pool.query(
+      "delete from social_profiles where id = $1 returning *",
+      [id]
+    );
+
+    return result.rows[0];
   } catch (error) {
     logger.error(error);
     return error;

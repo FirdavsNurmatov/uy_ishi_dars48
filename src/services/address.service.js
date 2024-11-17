@@ -18,6 +18,8 @@ export const getAddressByIdService = async (id) => {
       id,
     ]);
 
+    if (!address) return "Address not found!";
+
     return address.rows[0];
   } catch (error) {
     logger.error(error);
@@ -27,20 +29,10 @@ export const getAddressByIdService = async (id) => {
 
 export const createAddressService = async (address) => {
   try {
-    // const oldAddressData = await pool.query(
-    //   "select * from addresses where id = $1",
-    //   []
-    // );
-
-    // if (oldAddressData.rows[0]) return "Already has!";
-
     if (address.user_id) {
-      const user = await pool.query(
-        `
-        select * from users where id = $1
-      `,
-        [address?.user_id]
-      );
+      const user = await pool.query(`select * from users where id = $1`, [
+        address?.user_id,
+      ]);
 
       if (!user.rows[0]) return "User not found!";
     }
@@ -80,7 +72,6 @@ export const createAddressService = async (address) => {
 
     return result.rows[0];
   } catch (error) {
-    console.log(error);
     logger.error(error);
     return error;
   }
@@ -96,12 +87,9 @@ export const updateAddressService = async (id, data) => {
     if (!oldaddressData.rows[0]) return "Address not found!";
 
     if (data.user_id) {
-      const user = await pool.query(
-        `
-        select * from users where id = $1
-      `,
-        [data?.user_id]
-      );
+      const user = await pool.query(`select * from users where id = $1`, [
+        data?.user_id,
+      ]);
 
       if (!user.rows[0]) return "User not found!";
     }
@@ -133,7 +121,6 @@ export const updateAddressService = async (id, data) => {
 
     return result.rows[0];
   } catch (error) {
-    console.log(error);
     logger.error(error);
     return error;
   }
@@ -145,11 +132,14 @@ export const deleteAddressService = async (id) => {
       id,
     ]);
 
-    if (!data.rows[0]) return "Not found!";
+    if (!data.rows[0]) return "Address not found!";
 
-    await pool.query("delete from addresses where id = $1", [id]);
+    const result = await pool.query(
+      "delete from addresses where id = $1 returning *",
+      [id]
+    );
 
-    return "deleted";
+    return result.rows[0];
   } catch (error) {
     logger.error(error);
     return error;

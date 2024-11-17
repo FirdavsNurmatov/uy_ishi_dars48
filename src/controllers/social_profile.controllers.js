@@ -24,6 +24,9 @@ export async function getOneSocProfileByIdCon(req, res, next) {
 
     const socProfile = await getSocProfileByIdService(id);
 
+    if (socProfile instanceof String || typeof socProfile === "string")
+      return res.status(404).send(socProfile);
+
     res.send(socProfile);
   } catch (error) {
     logger.error(error);
@@ -40,6 +43,9 @@ export async function createSocProfileCon(req, res, next) {
       platform: socProfile.platform,
       platform_user: socProfile.platform_user,
     });
+
+    if (data instanceof String || typeof data === "string")
+      return res.status(404).send(data);
 
     res.send(data);
   } catch (error) {
@@ -58,6 +64,9 @@ export async function updateSocProfileCon(req, res, next) {
       platform_user: socProfileData?.platform_user,
     });
 
+    if (data instanceof String || typeof data === "string")
+      return res.status(404).send(data);
+
     res.send(data);
   } catch (error) {
     logger.error(error);
@@ -68,6 +77,9 @@ export async function updateSocProfileCon(req, res, next) {
 export async function deleteSocProfileCon(req, res, next) {
   try {
     const data = await deleteSocProfileService(req.params?.id);
+
+    if (data instanceof String || typeof data === "string")
+      return res.status(404).send(data);
 
     res.send(data);
   } catch (error) {

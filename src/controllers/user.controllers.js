@@ -25,6 +25,9 @@ export async function getOneUserByIdCon(req, res, next) {
 
     const user = await getOneUserByIdService(id);
 
+    if (user instanceof String || typeof user === "string")
+      return res.status(404).send(user);
+
     res.send(user);
   } catch (error) {
     logger.error(error);
@@ -47,6 +50,11 @@ export async function registerCon(req, res, next) {
       phone_number: user?.phone_number,
     });
 
+    if (data instanceof String || typeof data === "string") {
+      if (data.includes("exists!")) return res.status(409).send(data);
+      return res.status(404).send(data);
+    }
+
     res.send(data);
   } catch (error) {
     logger.error(error);
@@ -62,6 +70,9 @@ export async function loginCon(req, res, next) {
     };
 
     const result = await loginService(userData);
+
+    if (result instanceof String || typeof result === "string")
+      return res.status(404).send(result);
 
     res.send(result);
   } catch (error) {
@@ -85,6 +96,9 @@ export async function updateUserCon(req, res, next) {
       phone_number: userData?.phone_number,
     });
 
+    if (data instanceof String || typeof data === "string")
+      return res.status(404).send(data);
+
     res.send(data);
   } catch (error) {
     logger.error(error);
@@ -95,6 +109,9 @@ export async function updateUserCon(req, res, next) {
 export async function deleteUserCon(req, res, next) {
   try {
     const data = await deleteUserService(req.params?.id);
+
+    if (data instanceof String || typeof data === "string")
+      return res.status(404).send(data);
 
     res.send(data);
   } catch (error) {
