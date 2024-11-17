@@ -1,7 +1,6 @@
 import pool from "../database/index.js";
 import { config } from "dotenv";
-import { logger } from "../utils/logger.js";
-import { generateToken, hashPassword } from "../utils/index.js";
+import { generateToken, logger, hashPassword } from "../utils/index.js";
 
 config();
 
@@ -16,23 +15,34 @@ export const getAllUsersService = async () => {
   }
 };
 
-export const createUserService = async (user) => {
+export const getOneUserByIdService = async (id) => {
+  try {
+    const user = await pool.query("select * from users where id = $1", [id]);
+
+    return user.rows;
+  } catch (error) {
+    logger.error(error);
+    return error;
+  }
+};
+
+export const registerService = async (user) => {
   try {
     const data = await pool.query("select * from users where email = $1", [
       user.email,
     ]);
 
     if (data.rows[0]) {
-      return "Already has!";
+      return "Already exists!";
     }
     const queryString = `
       INSERT INTO users (
-        email,
         name,
+        email,
+        password,
         avatar,
         username,
         birth_of_date,
-        password,
         phone_number
       )
       VALUES (
@@ -49,12 +59,12 @@ export const createUserService = async (user) => {
 
     const hashedPassword = await hashPassword(user.password);
     const result = await pool.query(queryString, [
-      user.email,
       user.name,
+      user.email,
+      hashedPassword,
       user.avatar,
       user.username,
       user.birth_of_date,
-      hashedPassword,
       user.phone_number,
     ]);
 
@@ -72,18 +82,6 @@ export const loginService = async (data) => {
 
     return { accessToken: accessToken, refreshToken: refreshToken };
   } catch (error) {
-    console.log(error);
-    logger.error(error);
-    return error;
-  }
-};
-
-export const findByIdService = async (id) => {
-  try {
-    const user = await pool.query("select * from users where id = $1", [id]);
-
-    return user.rows;
-  } catch (error) {
     logger.error(error);
     return error;
   }
@@ -91,33 +89,45 @@ export const findByIdService = async (id) => {
 
 export const updateUserService = async (id, data) => {
   try {
-    const oldUserData = await pool.query("select * from users where id = $1", [
+    const oldUserData = await pool.query(`select * from users where id = $1`, [
       id,
     ]);
 
     const queryString = `
       UPDATE users
-      SET username = $1,
+      SET name = $1,
         email = $2,
         password = $3,
-        phone_number = $4
-      WHERE id = $5
+        role = $4,
+        avatar = $5,
+        username = $6,
+        birth_of_date = $7,
+        phone_number = $8
+      WHERE id = $9
 
       RETURNING *
-  `;
+    `;
 
-    const hashedPassword = 0; //await hashPassword(data?.password);
+    var hashedPassword = oldUserData.rows[0].password;
+
+    if (data.password) {
+      var hashedPassword = await hashPassword(data.password);
+    }
+
     const result = await pool.query(queryString, [
-      data.username || oldUserData.rows[0].username,
+      data.name || oldUserData.rows[0].name,
       data.email || oldUserData.rows[0].email,
-      hashedPassword || oldUserData.rows[0].password,
+      hashedPassword,
+      data.role || oldUserData.rows[0].role,
+      data.avatar || oldUserData.rows[0].avatar,
+      data.username || oldUserData.rows[0].username,
+      data.birth_of_date || oldUserData.rows[0].birth_of_date,
       data.phone_number || oldUserData.rows[0].phone_number,
       id,
     ]);
 
     return result.rows[0];
   } catch (error) {
-    console.log(error);
     logger.error(error);
     return error;
   }
@@ -128,8 +138,8 @@ export const deleteUserService = async (id) => {
     await pool.query("delete from users where id = $1", [id]);
 
     return "deleted";
-  } catch (e) {
-    logger.error(e);
-    throw new Error(e);
+  } catch (error) {
+    logger.error(error);
+    return error;
   }
 };

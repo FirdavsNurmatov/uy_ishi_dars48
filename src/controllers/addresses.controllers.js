@@ -1,12 +1,13 @@
+import { logger } from "../utils/index.js";
 import {
-  createAddressService,
-  deleteAddressService,
   getAllAddressesService,
+  getAddressByIdService,
+  createAddressService,
   updateAddressService,
-} from "../services/address.service.js";
-import { logger } from "../utils/logger.js";
+  deleteAddressService,
+} from "../services/index.js";
 
-export async function getAllAddresss(req, res, next) {
+export async function getAllAddressesCon(req, res, next) {
   try {
     const allAddresses = await getAllAddressesService();
 
@@ -18,27 +19,31 @@ export async function getAllAddresss(req, res, next) {
   }
 }
 
-export async function getOneAddressById(req, res, next) {
+export async function getOneAddressByIdCon(req, res, next) {
   try {
     const id = req.params.id;
 
-    const Address = await getOneAddressById(id);
+    const address = await getAddressByIdService(id);
 
-    res.send(Address);
+    res.send(address);
   } catch (error) {
     logger.error(error);
     next(error);
   }
 }
-export async function createAddress(req, res, next) {
+
+export async function createAddressCon(req, res, next) {
   try {
-    const Address = req.body;
+    const address = req.body;
 
     const data = await createAddressService({
-      Addressname: Address.Addressname,
-      email: Address.email,
-      password: Address.password,
-      phone_number: Address.phone_number,
+      user_id: address.user_id,
+      title: address.title,
+      address_line: address.address_line,
+      country: address.country,
+      city: address.city,
+      postal_code: address.postal_code,
+      phone_number: address.phone_number,
     });
 
     res.send(data);
@@ -47,18 +52,20 @@ export async function createAddress(req, res, next) {
     next(error);
   }
 }
-export async function updateAddress(req, res, next) {
-  try {
-    const addressData = {
-      user_id: req.body.user_id,
-      title: req.body.title,
-      address_line: req.body.addfress_line,
-      country: req.body.country,
-      city: req.body.city,
-      phone_number: req.body.phone_number,
-    };
 
-    const data = await updateAddressService(req.params?.id, addressData);
+export async function updateAddressCon(req, res, next) {
+  try {
+    const address = req.body;
+
+    const data = await updateAddressService(req.params?.id, {
+      user_id: address?.user_id,
+      title: address?.title,
+      address_line: address?.address_line,
+      country: address?.country,
+      city: address?.city,
+      postal_code: address?.postal_code,
+      phone_number: address?.phone_number,
+    });
 
     res.send(data);
   } catch (error) {
@@ -66,7 +73,8 @@ export async function updateAddress(req, res, next) {
     next(error);
   }
 }
-export async function deleteAddress(req, res, next) {
+
+export async function deleteAddressCon(req, res, next) {
   try {
     const data = await deleteAddressService(req.params?.id);
 

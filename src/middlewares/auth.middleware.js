@@ -1,5 +1,4 @@
-import { logger } from "../utils/index.js";
-import { isvalidToken } from "../utils/jwt/index.js";
+import { isvalidToken, logger } from "../utils/index.js";
 
 export const authGuard = (req, res, next) => {
   try {

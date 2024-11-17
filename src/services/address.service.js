@@ -12,14 +12,37 @@ export const getAllAddressesService = async () => {
   }
 };
 
-export const createAddressService = async (address) => {
+export const getAddressByIdService = async (id) => {
   try {
     const address = await pool.query("select * from addresses where id = $1", [
-      ,
+      id,
     ]);
 
-    if (address) {
-      return "Already has!";
+    return address.rows[0];
+  } catch (error) {
+    logger.error(error);
+    return error;
+  }
+};
+
+export const createAddressService = async (address) => {
+  try {
+    // const oldAddressData = await pool.query(
+    //   "select * from addresses where id = $1",
+    //   []
+    // );
+
+    // if (oldAddressData.rows[0]) return "Already has!";
+
+    if (address.user_id) {
+      const user = await pool.query(
+        `
+        select * from users where id = $1
+      `,
+        [address?.user_id]
+      );
+
+      if (!user.rows[0]) return "User not found!";
     }
 
     const queryString = `
@@ -29,17 +52,19 @@ export const createAddressService = async (address) => {
         address_line,
         country,
         city,
+        postal_code,
         phone_number
       )
-        VALUES
-        (
+      VALUES (
         $1,
         $2,
         $3,
-        $4
+        $4,
         $5,
         $6,
-        )
+        $7
+      )
+
       RETURNING *
     `;
 
@@ -49,24 +74,13 @@ export const createAddressService = async (address) => {
       address.address_line,
       address.country,
       address.city,
+      address.postal_code,
       address.phone_number,
     ]);
 
     return result.rows[0];
   } catch (error) {
-    logger.error(error);
-    return error;
-  }
-};
-
-export const getAddressByIdService = async (id) => {
-  try {
-    const address = await pool.query("select * from addresses where id = $1", [
-      id,
-    ]);
-
-    return address.rows;
-  } catch (error) {
+    console.log(error);
     logger.error(error);
     return error;
   }
@@ -79,6 +93,19 @@ export const updateAddressService = async (id, data) => {
       [id]
     );
 
+    if (!oldaddressData.rows[0]) return "Address not found!";
+
+    if (data.user_id) {
+      const user = await pool.query(
+        `
+        select * from users where id = $1
+      `,
+        [data?.user_id]
+      );
+
+      if (!user.rows[0]) return "User not found!";
+    }
+
     const queryString = `
       UPDATE addresses
       SET user_id = $1,
@@ -86,24 +113,27 @@ export const updateAddressService = async (id, data) => {
         address_line = $3,
         country = $4,
         city = $5,
-        phone_number = $6
-      WHERE id = $7
+        postal_code = $6,
+        phone_number = $7
+      WHERE id = $8
 
       RETURNING *
     `;
 
     const result = await pool.query(queryString, [
-      address.user_id || oldaddressData.rows[0].user_id,
-      address.title || oldaddressData.rows[0].title,
-      address.address_line || oldaddressData.rows[0].address_line,
-      address.country || oldaddressData.rows[0].country,
-      address.city || oldaddressData.rows[0].city,
-      address.phone_number || oldaddressData.rows[0].phone_number,
+      data.user_id || oldaddressData.rows[0].user_id,
+      data.title || oldaddressData.rows[0].title,
+      data.address_line || oldaddressData.rows[0].address_line,
+      data.country || oldaddressData.rows[0].country,
+      data.city || oldaddressData.rows[0].city,
+      data.postal_code || oldaddressData.rows[0].postal_code,
+      data.phone_number || oldaddressData.rows[0].phone_number,
       id,
     ]);
 
     return result.rows[0];
   } catch (error) {
+    console.log(error);
     logger.error(error);
     return error;
   }
@@ -111,6 +141,12 @@ export const updateAddressService = async (id, data) => {
 
 export const deleteAddressService = async (id) => {
   try {
+    const data = await pool.query("select * from addresses where id = $1", [
+      id,
+    ]);
+
+    if (!data.rows[0]) return "Not found!";
+
     await pool.query("delete from addresses where id = $1", [id]);
 
     return "deleted";

@@ -1,17 +1,17 @@
 import express from "express";
 import {
-  createAddress,
-  deleteAddress,
-  getAllAddresss,
-  getOneAddressById,
-  updateAddress,
+  getAllAddressesCon,
+  getOneAddressByIdCon,
+  createAddressCon,
+  updateAddressCon,
+  deleteAddressCon,
 } from "../controllers/index.js";
 import { authGuard } from "../middlewares/index.js";
 
 export const addressRouter = express.Router();
 
-addressRouter.get("/all", authGuard, getAllAddresss);
-addressRouter.get("/all/:id", authGuard, getOneAddressById);
-addressRouter.post("/new", authGuard, createAddress);
-addressRouter.put("/update/:id", authGuard, updateAddress);
-addressRouter.delete("/delete", authGuard, deleteAddress);
+addressRouter.get("/", authGuard, getAllAddressesCon);
+addressRouter.get("/:id", authGuard, getOneAddressByIdCon);
+addressRouter.post("/", authGuard, createAddressCon);
+addressRouter.put("/:id", authGuard, updateAddressCon);
+addressRouter.delete("/:id", authGuard, deleteAddressCon);

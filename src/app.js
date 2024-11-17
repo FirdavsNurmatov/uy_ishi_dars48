@@ -1,8 +1,15 @@
 import express from "express";
 import morgan from "morgan";
-import { createUserTable } from "./schema/index.js";
-import { userRouter } from "./routes/user.routes.js";
-import { addressRouter } from "./routes/address.routes.js";
+import {
+  addressRouter,
+  social_ProfileRouter,
+  userRouter,
+} from "./routes/index.js";
+import {
+  createAddressTable,
+  createUserTable,
+  createSocProfilesTable,
+} from "./schema/index.js";
 
 const app = express();
 
@@ -12,9 +19,12 @@ app.use(morgan("dev"));
 
 app.use("/user", userRouter);
 app.use("/address", addressRouter);
+app.use("/social_profile", social_ProfileRouter);
 
 app.get("/api/v1/setup", async (req, res) => {
   await createUserTable();
+  await createAddressTable();
+  await createSocProfilesTable();
   res.send("ok");
 });
 

@@ -1,19 +1,19 @@
 import express from "express";
 import {
-  createUser,
-  deleteUser,
-  getAllUsers,
-  getOneUserById,
-  loginUserController,
-  updateUser,
+  getAllUsersCon,
+  getOneUserByIdCon,
+  registerCon,
+  loginCon,
+  updateUserCon,
+  deleteUserCon,
 } from "../controllers/index.js";
 import { authGuard } from "../middlewares/index.js";
 
 export const userRouter = express.Router();
 
-userRouter.get("/all", authGuard, getAllUsers);
-userRouter.get("/all/:id", authGuard, getOneUserById);
-userRouter.post("/new", createUser);
-userRouter.post("/login", loginUserController);
-userRouter.put("/update/:id", authGuard, updateUser);
-userRouter.delete("/delete/:id", authGuard, deleteUser);
+userRouter.get("/", authGuard, getAllUsersCon);
+userRouter.get("/:id", authGuard, getOneUserByIdCon);
+userRouter.post("/register", registerCon);
+userRouter.post("/login", loginCon);
+userRouter.put("/:id", authGuard, updateUserCon);
+userRouter.delete("/:id", authGuard, deleteUserCon);

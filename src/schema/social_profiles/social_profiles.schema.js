@@ -12,7 +12,6 @@ export const createSocProfilesTable = async () => {
             )
         `);
   } catch (error) {
-    console.log(error);
     logger.error(error);
   }
 };

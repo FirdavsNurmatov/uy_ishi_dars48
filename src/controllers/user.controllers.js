@@ -1,14 +1,14 @@
-import { logger } from "../utils/logger.js";
+import { logger } from "../utils/index.js";
 import {
-  createUserService,
-  deleteUserService,
-  findByIdService,
   getAllUsersService,
+  getOneUserByIdService,
+  registerService,
   loginService,
   updateUserService,
-} from "../services/user.service.js";
+  deleteUserService,
+} from "../services/index.js";
 
-export async function getAllUsers(req, res, next) {
+export async function getAllUsersCon(req, res, next) {
   try {
     const allUsers = await getAllUsersService();
 
@@ -19,11 +19,11 @@ export async function getAllUsers(req, res, next) {
   }
 }
 
-export async function getOneUserById(req, res, next) {
+export async function getOneUserByIdCon(req, res, next) {
   try {
     const id = req.params.id;
 
-    const user = await findByIdService(id);
+    const user = await getOneUserByIdService(id);
 
     res.send(user);
   } catch (error) {
@@ -31,15 +31,20 @@ export async function getOneUserById(req, res, next) {
     next(error);
   }
 }
-export async function createUser(req, res, next) {
+
+export async function registerCon(req, res, next) {
   try {
     const user = req.body;
 
-    const data = await createUserService({
-      username: user.username,
-      email: user.email,
-      password: user.password,
-      phone_number: user.phone_number,
+    const data = await registerService({
+      name: user?.name,
+      email: user?.email,
+      password: user?.password,
+      role: user?.role,
+      avatar: user?.avatar,
+      username: user?.username,
+      birth_of_date: user?.birth_of_date,
+      phone_number: user?.phone_number,
     });
 
     res.send(data);
@@ -49,7 +54,7 @@ export async function createUser(req, res, next) {
   }
 }
 
-export async function loginUserController(req, res, next) {
+export async function loginCon(req, res, next) {
   try {
     const userData = {
       email: req.body?.email,
@@ -65,16 +70,20 @@ export async function loginUserController(req, res, next) {
   }
 }
 
-export async function updateUser(req, res, next) {
+export async function updateUserCon(req, res, next) {
   try {
-    const user = {
-      email: req.body?.email,
-      username: req.body?.username,
-      password: req.body?.password,
-      phone_number: req.body?.phone_number,
-    };
+    const userData = req.body;
 
-    const data = await updateUserService(req.params?.id, user);
+    const data = await updateUserService(req.params?.id, {
+      name: userData?.name,
+      email: userData?.email,
+      password: userData?.password,
+      role: userData?.role,
+      avatar: userData?.avatar,
+      username: userData?.username,
+      birth_of_date: userData?.birth_of_date,
+      phone_number: userData?.phone_number,
+    });
 
     res.send(data);
   } catch (error) {
@@ -82,7 +91,8 @@ export async function updateUser(req, res, next) {
     next(error);
   }
 }
-export async function deleteUser(req, res, next) {
+
+export async function deleteUserCon(req, res, next) {
   try {
     const data = await deleteUserService(req.params?.id);
 
